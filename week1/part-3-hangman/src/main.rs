@@ -59,7 +59,7 @@ fn main() {
     // secret_word by doing secret_word_chars[i].
     let secret_word_chars: Vec<char> = secret_word.chars().collect();
     // Uncomment for debugging:
-    println!("random word: {}", secret_word);
+    // println!("random word: {}", secret_word);
     // Your code here! :)
     print!("Welcome to CS110L Hangman!\n");
     let mut left_chars = secret_word_chars.len();
@@ -88,5 +88,50 @@ fn main() {
         );
     } else {
         print!("Sorry, you ran out of guesses!");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_check_contain_and_fill_correct_guess() {
+        let secret = vec!['r', 'u', 's', 't'];
+        let mut target = vec!['-', '-', '-', '-'];
+        let guess = 'r';
+        let result = check_contain_and_fill(&secret, &mut target, &guess);
+        assert!(result);
+        assert_eq!(target, vec!['r', '-', '-', '-']);
+    }
+
+    #[test]
+    fn test_check_contain_and_fill_incorrect_guess() {
+        let secret = vec!['r', 'u', 's', 't'];
+        let mut target = vec!['-', '-', '-', '-'];
+        let guess = 'x';
+        let result = check_contain_and_fill(&secret, &mut target, &guess);
+        assert!(!result);
+        assert_eq!(target, vec!['-', '-', '-', '-']);
+    }
+
+    #[test]
+    fn test_check_contain_and_fill_multiple_occurrences() {
+        let secret = vec!['r', 'u', 's', 't', 'r'];
+        let mut target = vec!['-', '-', '-', '-', '-'];
+        let guess = 'r';
+        let result = check_contain_and_fill(&secret, &mut target, &guess);
+        assert!(result);
+        assert_eq!(target, vec!['r', '-', '-', '-', '-']);
+    }
+
+    #[test]
+    fn test_check_contain_and_fill_already_revealed() {
+        let secret = vec!['r', 'u', 's', 't'];
+        let mut target = vec!['r', '-', '-', '-'];
+        let guess = 'r';
+        let result = check_contain_and_fill(&secret, &mut target, &guess);
+        assert!(!result);
+        assert_eq!(target, vec!['r', '-', '-', '-']);
     }
 }
