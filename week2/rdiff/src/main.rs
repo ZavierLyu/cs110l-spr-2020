@@ -3,24 +3,45 @@ use std::env;
 use std::fs::File; // For read_file_lines()
 use std::io::{self, BufRead}; // For read_file_lines()
 use std::process;
+use std::cmp::max;
 
 pub mod grid;
 
 /// Reads the file at the supplied path, and returns a vector of strings.
-#[allow(unused)] // TODO: delete this line when you implement this function
+// #[allow(unused)] // TODO: delete this line when you implement this function
 fn read_file_lines(filename: &String) -> Result<Vec<String>, io::Error> {
-    unimplemented!();
+    let file = match File::open(filename) {
+        Ok(file) => file,
+        Err(err) => return Err(err),
+    };
+    let mut vec_line_str: Vec<String> = Vec::new();
+    for line in io::BufReader::new(file).lines() {
+        let line_str = line?;
+        vec_line_str.push(line_str);
+    }
+    Ok(vec_line_str)
     // Be sure to delete the #[allow(unused)] line above
 }
 
-#[allow(unused)] // TODO: delete this line when you implement this function
+// #[allow(unused)] // TODO: delete this line when you implement this function
 fn lcs(seq1: &Vec<String>, seq2: &Vec<String>) -> Grid {
     // Note: Feel free to use unwrap() in this code, as long as you're basically certain it'll
     // never happen. Conceptually, unwrap() is justified here, because there's not really any error
     // condition you're watching out for (i.e. as long as your code is written correctly, nothing
     // external can go wrong that we would want to handle in higher-level functions). The unwrap()
     // calls act like having asserts in C code, i.e. as guards against programming error.
-    unimplemented!();
+    let (m,n) = (seq1.len(), seq2.len());
+    let mut dp: Grid = Grid::new(m+1, n+1);
+    for i in 1..=m {
+        for j in 1..=n {
+            if seq1[i-1] == seq2[j-1] {
+                dp.set(i, j, dp.get(i-1,j-1).unwrap() + 1).unwrap();
+            } else {
+                dp.set(i, j, max(dp.get(i-1, j).unwrap(), dp.get(i, j-1).unwrap())).unwrap();
+            }
+        }
+    }
+    dp
     // Be sure to delete the #[allow(unused)] line above
 }
 
