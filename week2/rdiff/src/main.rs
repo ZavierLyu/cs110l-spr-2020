@@ -45,13 +45,24 @@ fn lcs(seq1: &Vec<String>, seq2: &Vec<String>) -> Grid {
     // Be sure to delete the #[allow(unused)] line above
 }
 
-#[allow(unused)] // TODO: delete this line when you implement this function
+// #[allow(unused)] // TODO: delete this line when you implement this function
 fn print_diff(lcs_table: &Grid, lines1: &Vec<String>, lines2: &Vec<String>, i: usize, j: usize) {
-    unimplemented!();
+    if i > 0 && j > 0 && lines1[i - 1] == lines2[j - 1] {
+        print_diff(lcs_table, lines1, lines2, i-1, j-1);
+        println!("  {}", lines1[i - 1]);
+    } else if j > 0 && (i == 0 || lcs_table.get(i, j-1).unwrap() >= lcs_table.get(i-1, j).unwrap()) {
+        print_diff(lcs_table, lines1, lines2, i, j-1);
+        println!("> {}", lines2[j - 1]);
+    } else if i > 0 && (j == 0 || lcs_table.get(i, j-1).unwrap() < lcs_table.get(i-1, j).unwrap()) {
+        print_diff(lcs_table, lines1, lines2, i-1, j);
+        println!("< {}", lines1[i - 1]);
+    } else {
+        println!();
+    }
     // Be sure to delete the #[allow(unused)] line above
 }
 
-#[allow(unused)] // TODO: delete this line when you implement this function
+// #[allow(unused)] // TODO: delete this line when you implement this function
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
@@ -61,7 +72,10 @@ fn main() {
     let filename1 = &args[1];
     let filename2 = &args[2];
 
-    unimplemented!();
+    let file_text1 = read_file_lines(&filename1).expect("read file lines");
+    let file_text2 = read_file_lines(&filename2).expect("read file lines");
+    let lcs_grid = lcs(&file_text1, &file_text2);
+    print_diff(&lcs_grid, &file_text1, &file_text2, file_text1.len(), file_text2.len());
     // Be sure to delete the #[allow(unused)] line above
 }
 
