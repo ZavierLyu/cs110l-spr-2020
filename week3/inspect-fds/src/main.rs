@@ -1,4 +1,6 @@
 use std::env;
+use crate::process::Process;
+use crate::ps_utils::get_target;
 
 mod open_file;
 mod process;
@@ -10,11 +12,18 @@ fn main() {
         println!("Usage: {} <name or pid of target>", args[0]);
         std::process::exit(1);
     }
-    #[allow(unused)] // TODO: delete this line for Milestone 1
+    // #[allow(unused)] // TODO: delete this line for Milestone 1
     let target = &args[1];
-
-    // TODO: Milestone 1: Get the target Process using psutils::get_target()
-    unimplemented!();
+    let process_opt: Option<Process> = get_target(target).expect("Err: get_target");
+    match process_opt {
+        None => {
+            println!("Target \"{}\" did not match any running PIDs or executables", target);
+            std::process::exit(1);
+        },
+        Some(p) => {
+            println!("Pid {} of target {}", p.pid, target);
+        }
+    }
 }
 
 #[cfg(test)]
