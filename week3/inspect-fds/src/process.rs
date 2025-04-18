@@ -1,6 +1,7 @@
 use crate::open_file::OpenFile;
 #[allow(unused)] // TODO: delete this line for Milestone 3
 use std::fs;
+use std::path::Path;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Process {
@@ -10,7 +11,7 @@ pub struct Process {
 }
 
 impl Process {
-    #[allow(unused)] // TODO: delete this line for Milestone 1
+    // #[allow(unused)] // TODO: delete this line for Milestone 1
     pub fn new(pid: usize, ppid: usize, command: String) -> Process {
         Process { pid, ppid, command }
     }
@@ -20,10 +21,21 @@ impl Process {
     /// information will commonly be unavailable if the process has exited. (Zombie processes
     /// still have a pid, but their resources have already been freed, including the file
     /// descriptor table.)
-    #[allow(unused)] // TODO: delete this line for Milestone 3
+    // #[allow(unused)] // TODO: delete this line for Milestone 3
     pub fn list_fds(&self) -> Option<Vec<usize>> {
         // TODO: implement for Milestone 3
-        unimplemented!();
+        let fd_path_str: String = format!("/proc/{}/fd", self.pid);
+        let fd_path: &Path = Path::new(&fd_path_str);
+        if !fd_path.is_dir() {
+            return None;
+        }
+        let mut fd_vec: Vec<usize> = Vec::new();
+        for entry in fs::read_dir(fd_path).ok()? {
+            let fd_str = entry.ok()?.file_name();
+            let fd_num = fd_str.into_string().ok()?.parse::<usize>().ok()?;
+            fd_vec.push(fd_num);
+        }
+        Some(fd_vec)
     }
 
     /// This function returns a list of (fdnumber, OpenFile) tuples, if file descriptor
@@ -36,6 +48,21 @@ impl Process {
             open_files.push((fd, OpenFile::from_fd(self.pid, fd)?));
         }
         Some(open_files)
+    }
+
+    /// Print the basic metadata of process
+    pub fn print(&self) {
+        if let Some(fds) = self.list_fds() {
+            println!(
+                "========== '{}' (pid {}, ppid {}, fd {:?}) ========== ",
+                self.command, self.pid, self.ppid, fds
+            )
+        } else {
+            println!(
+                "========== '{}' (pid {}, ppid {}, fd FETCH FAILED) ========== ",
+                self.command, self.pid, self.ppid
+            )
+        }
     }
 }
 
@@ -54,11 +81,12 @@ mod test {
     fn test_list_fds() {
         let mut test_subprocess = start_c_program("./multi_pipe_test");
         let process = ps_utils::get_target("multi_pipe_test").unwrap().unwrap();
+        process.print();
         assert_eq!(
             process
                 .list_fds()
                 .expect("Expected list_fds to find file descriptors, but it returned None"),
-            vec![0, 1, 2, 4, 5]
+            vec![0, 1, 2, 4, 5, 19, 20, 22, 25]
         );
         let _ = test_subprocess.kill();
     }

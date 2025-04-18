@@ -15,6 +15,7 @@ fn main() {
     // #[allow(unused)] // TODO: delete this line for Milestone 1
     let target = &args[1];
     let process_opt: Option<Process> = get_target(target).expect("Err: get_target");
+    let process: Process;
     match process_opt {
         None => {
             println!("Target \"{}\" did not match any running PIDs or executables", target);
@@ -22,8 +23,10 @@ fn main() {
         },
         Some(p) => {
             println!("Pid {} of target {}", p.pid, target);
+            process = p;
         }
     }
+    process.print(); 
 }
 
 #[cfg(test)]
