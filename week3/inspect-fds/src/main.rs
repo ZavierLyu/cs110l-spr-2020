@@ -27,6 +27,10 @@ fn main() {
         }
     }
     process.print(); 
+    let child_proceeses = ps_utils::get_child_processes(process.pid).expect("Err: failed to get child process");
+    for p in child_proceeses {
+        p.print();
+    }
 }
 
 #[cfg(test)]
