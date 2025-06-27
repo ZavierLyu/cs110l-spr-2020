@@ -19,5 +19,7 @@ docker run \
     --rm \
     `# Get an interactive terminal` \
     -it \
+    `# Run as amd64 architecture` \
+    --platform=linux/amd64 \
     `# Run the deet image` \
     deet "$@"
