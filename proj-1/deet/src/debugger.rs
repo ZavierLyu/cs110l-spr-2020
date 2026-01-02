@@ -33,6 +33,7 @@ impl Debugger {
         match inf.go() {
             Ok(status) => match status {
                 Status::Exited(code) => {
+                    self.inferior = None;
                     println!("Child exited with status {}", code)
                 }
                 Status::Signaled(sig) => {
