@@ -37,6 +37,7 @@ impl Debugger {
                     println!("Child exited with status {}", code)
                 }
                 Status::Signaled(sig) => {
+                    self.inferior = None;
                     println!("Child terminated by signal {:?}", sig)
                 }
                 Status::Stopped(sig, rip) => {
@@ -67,6 +68,9 @@ impl Debugger {
                 }
                 DebuggerCommand::Continue => self.continue_and_exec(),
                 DebuggerCommand::Quit => {
+                    if let Some(inferior) = &mut self.inferior {
+                        inferior.kill().expect("Inferior.kill wasn't running properly");
+                    }
                     return;
                 }
             }
