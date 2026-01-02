@@ -28,35 +28,43 @@ impl Debugger {
         }
     }
 
+    pub fn continue_and_exec(&mut self) {
+        let inf = self.inferior.as_mut().unwrap();
+        match inf.go() {
+            Ok(status) => match status {
+                Status::Exited(code) => {
+                    println!("Child exited with status {}", code)
+                }
+                Status::Signaled(sig) => {
+                    println!("Child terminated by signal {:?}", sig)
+                }
+                Status::Stopped(sig, rip) => {
+                    println!("Child stopped (signal: {:?}, rip: 0x{:x})", sig, rip)
+                }
+            },
+            Err(e) => println!("Error continue inferior: {:?}", e),
+        }
+    }
+
     pub fn run(&mut self) {
         loop {
             match self.get_next_command() {
                 DebuggerCommand::Run(args) => {
+                    if let Some(inferior) = &mut self.inferior {
+                        inferior.kill().expect("Inferior.kill wasn't running properly");
+                    }
                     if let Some(inferior) = Inferior::new(&self.target, &args) {
                         // Create the inferior
                         self.inferior = Some(inferior);
                         // TODO (milestone 1): make the inferior run
                         // You may use self.inferior.as_mut().unwrap() to get a mutable reference
                         // to the Inferior object
-                        let inf = self.inferior.as_mut().unwrap();
-                        match inf.go() {
-                            Ok(status) => match status {
-                                Status::Exited(code) => {
-                                    println!("Child exited with status {}", code)
-                                }
-                                Status::Signaled(sig) => {
-                                    println!("Child terminated by signal {:?}", sig)
-                                }
-                                Status::Stopped(sig, rip) => {
-                                    println!("Child stopped (signal: {:?}, rip: 0x{:x})", sig, rip)
-                                }
-                            },
-                            Err(e) => println!("Error continue inferior: {:?}", e),
-                        }
+                        self.continue_and_exec();
                     } else {
                         println!("Error starting subprocess");
                     }
                 }
+                DebuggerCommand::Continue => self.continue_and_exec(),
                 DebuggerCommand::Quit => {
                     return;
                 }

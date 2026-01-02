@@ -63,6 +63,12 @@ impl Inferior {
         self.wait(None)
     }
 
+    /// Kill the inferior process.
+    pub fn kill(&mut self) -> Result<(), std::io::Error> {
+        println!("Killing running inferior (pid {})", self.pid());
+        self.child.kill()
+    }
+
     /// Returns the pid of this inferior.
     pub fn pid(&self) -> Pid {
         nix::unistd::Pid::from_raw(self.child.id() as i32)
