@@ -29,23 +29,32 @@ impl Debugger {
     }
 
     pub fn continue_and_exec(&mut self) {
-        let inf = self.inferior.as_mut().unwrap();
+        let inf = match self.inferior.take() {
+            Some(inf) => inf,
+            None => {
+                println!("No inferior to run and continue");
+                return;
+            }
+        };
+
         match inf.go() {
             Ok(status) => match status {
                 Status::Exited(code) => {
-                    self.inferior = None;
                     println!("Child exited with status {}", code)
                 }
                 Status::Signaled(sig) => {
-                    self.inferior = None;
                     println!("Child terminated by signal {:?}", sig)
                 }
                 Status::Stopped(sig, rip) => {
-                    println!("Child stopped (signal: {:?}, rip: 0x{:x})", sig, rip)
+                    println!("Child stopped (signal: {:?}, rip: 0x{:x})", sig, rip);
+                    self.inferior = Some(inf)
                 }
             },
-            Err(e) => println!("Error continue inferior: {:?}", e),
-        }
+            Err(e) => {
+                println!("Error continue inferior: {:?}", e);
+                self.inferior = Some(inf)
+            }
+        };
     }
 
     pub fn run(&mut self) {
@@ -53,7 +62,9 @@ impl Debugger {
             match self.get_next_command() {
                 DebuggerCommand::Run(args) => {
                     if let Some(inferior) = &mut self.inferior {
-                        inferior.kill().expect("Inferior.kill wasn't running properly");
+                        inferior
+                            .kill()
+                            .expect("Inferior.kill wasn't running properly");
                     }
                     if let Some(inferior) = Inferior::new(&self.target, &args) {
                         // Create the inferior
@@ -66,10 +77,19 @@ impl Debugger {
                         println!("Error starting subprocess");
                     }
                 }
-                DebuggerCommand::Continue => self.continue_and_exec(),
+                DebuggerCommand::Continue => match &self.inferior {
+                    Some(_inf) => {
+                        self.continue_and_exec();
+                    }
+                    None => {
+                        println!("No inferior to continue")
+                    }
+                },
                 DebuggerCommand::Quit => {
                     if let Some(inferior) = &mut self.inferior {
-                        inferior.kill().expect("Inferior.kill wasn't running properly");
+                        inferior
+                            .kill()
+                            .expect("Inferior.kill wasn't running properly");
                     }
                     return;
                 }

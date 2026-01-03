@@ -44,13 +44,13 @@ impl Inferior {
             cmd.pre_exec(|| child_traceme());
         }
         let child = match cmd.spawn() {
-            Ok(child) => child, 
+            Ok(child) => child,
             Err(e) => {
                 eprintln!("Inferior::new failed to spawn inferior: {}", e);
                 return None;
             }
         };
-        let inferior = Inferior{child};
+        let inferior = Inferior { child };
         match inferior.wait(Some(WaitPidFlag::WSTOPPED)) {
             Ok(Status::Stopped(signal, _)) if signal == SIGTRAP => Some(inferior),
             _ => None,
@@ -64,9 +64,10 @@ impl Inferior {
     }
 
     /// Kill the inferior process.
-    pub fn kill(&mut self) -> Result<(), std::io::Error> {
+    pub fn kill(&mut self) -> Result<Status, nix::Error> {
         println!("Killing running inferior (pid {})", self.pid());
-        self.child.kill()
+        let _ = self.child.kill(); // ignore ESRCH if already dead
+        self.wait(None)
     }
 
     /// Returns the pid of this inferior.
